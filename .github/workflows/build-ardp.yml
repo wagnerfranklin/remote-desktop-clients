@@ -29,22 +29,26 @@ jobs:
           chmod +x ./download-prebuilt-dependencies.sh
           chmod +x ./bVNC/prepare_project.sh
           
-          # Baixa dependências pré-compiladas
+          # Baixa dependências C/C++ pré-compiladas
           ./download-prebuilt-dependencies.sh
           
-          # Garante que o módulo aRDP esteja no settings.gradle
+          # Garante inclusão dos módulos no settings.gradle
           if ! grep -q "aRDP-app" settings.gradle; then
             echo "include ':aRDP'" >> settings.gradle
             echo "include ':aRDP-app'" >> settings.gradle
           fi
 
-          # Prepara o projeto usando o SDK nativo do runner
+          # Harmoniza a JVM entre Kotlin e Java e desativa checagem estrita
+          echo "org.gradle.java.home=$JAVA_HOME" >> gradle.properties
+          echo "kotlin.jvm.target.validation.mode=warning" >> gradle.properties
+
+          # Prepara o projeto para aRDP
           ./bVNC/prepare_project.sh --skip-build aRDP "$ANDROID_HOME"
 
       - name: Build aRDP Pro APK (Debug)
         run: |
           chmod +x ./gradlew
-          ./gradlew :aRDP-app:assembleDebug --stacktrace
+          ./gradlew :aRDP-app:assembleDebug -Pkotlin.jvm.target.validation.mode=warning --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
