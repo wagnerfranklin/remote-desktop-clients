@@ -14,11 +14,11 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Accept Android SDK Licenses
         run: |
@@ -29,7 +29,7 @@ jobs:
           chmod +x ./download-prebuilt-dependencies.sh
           chmod +x ./bVNC/prepare_project.sh
           
-          # Baixa dependências C/C++ pré-compiladas
+          # Baixa dependências pré-compiladas
           ./download-prebuilt-dependencies.sh
           
           # Garante inclusão dos módulos no settings.gradle
@@ -38,9 +38,8 @@ jobs:
             echo "include ':aRDP-app'" >> settings.gradle
           fi
 
-          # Harmoniza a JVM entre Kotlin e Java e desativa checagem estrita
+          # Fixa o Gradle no JDK 21
           echo "org.gradle.java.home=$JAVA_HOME" >> gradle.properties
-          echo "kotlin.jvm.target.validation.mode=warning" >> gradle.properties
 
           # Prepara o projeto para aRDP
           ./bVNC/prepare_project.sh --skip-build aRDP "$ANDROID_HOME"
@@ -48,7 +47,7 @@ jobs:
       - name: Build aRDP Pro APK (Debug)
         run: |
           chmod +x ./gradlew
-          ./gradlew :aRDP-app:assembleDebug -Pkotlin.jvm.target.validation.mode=warning --stacktrace
+          ./gradlew :aRDP-app:assembleDebug --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
