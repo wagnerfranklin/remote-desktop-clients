@@ -29,16 +29,16 @@ jobs:
           chmod +x ./download-prebuilt-dependencies.sh
           chmod +x ./bVNC/prepare_project.sh
           
-          # 1. Baixa dependencias pre-compiladas
+          # Baixa dependências pré-compiladas
           ./download-prebuilt-dependencies.sh
           
-          # 2. Garante que o modulo aRDP esteja no settings.gradle
+          # Garante que o módulo aRDP esteja no settings.gradle
           if ! grep -q "aRDP-app" settings.gradle; then
             echo "include ':aRDP'" >> settings.gradle
             echo "include ':aRDP-app'" >> settings.gradle
           fi
 
-          # 3. Prepara o projeto usando o SDK pre-instalado no runner
+          # Prepara o projeto usando o SDK nativo do runner
           ./bVNC/prepare_project.sh --skip-build aRDP "$ANDROID_HOME"
 
       - name: Build aRDP Pro APK (Debug)
