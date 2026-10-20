@@ -1,0 +1,52 @@
+name: Build aRDP Pro APK
+
+on:
+  workflow_dispatch: # Permite disparar manualmente com um clique
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Prepare aRDP project & prebuilt libraries
+        run: |
+          chmod +x ./download-prebuilt-dependencies.sh
+          chmod +x ./bVNC/prepare_project.sh
+          
+          # Baixa dependências C/C++ pré-compiladas
+          ./download-prebuilt-dependencies.sh
+          
+          # Garante que o módulo aRDP esteja habilitado no settings.gradle
+          if ! grep -q "aRDP-app" settings.gradle; then
+            echo "include ':aRDP'" >> settings.gradle
+            echo "include ':aRDP-app'" >> settings.gradle
+          fi
+
+          # Prepara os symlinks e configurações para aRDP
+          ./bVNC/prepare_project.sh --skip-build aRDP "$ANDROID_HOME"
+
+      - name: Build aRDP Pro APK (Debug)
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :aRDP-app:assembleDebug --stacktrace
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aRDP-Pro-Debug-APK
+          path: aRDP-app/build/outputs/apk/debug/*.apk
