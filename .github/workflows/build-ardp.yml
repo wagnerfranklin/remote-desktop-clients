@@ -29,19 +29,26 @@ jobs:
           chmod +x ./download-prebuilt-dependencies.sh
           chmod +x ./bVNC/prepare_project.sh
           
-          # Baixa dependências pré-compiladas
+          # 1. Baixa dependencias pre-compiladas
           ./download-prebuilt-dependencies.sh
           
-          # Garante inclusão dos módulos no settings.gradle
+          # 2. Aplica os patches oficiais do FreeRDP fornecidos pelo autor
+          pushd remoteClientLib/jni/libs/deps/FreeRDP/
+          for p in ../../*_freerdp_*.patch; do
+            patch -N -p1 < "$p" || true
+          done
+          popd
+
+          # 3. Garante inclusao dos modulos no settings.gradle
           if ! grep -q "aRDP-app" settings.gradle; then
             echo "include ':aRDP'" >> settings.gradle
             echo "include ':aRDP-app'" >> settings.gradle
           fi
 
-          # Fixa o Gradle no JDK 21
+          # 4. Fixa o Gradle no JDK 21
           echo "org.gradle.java.home=$JAVA_HOME" >> gradle.properties
 
-          # Prepara o projeto para aRDP
+          # 5. Prepara o projeto para aRDP
           ./bVNC/prepare_project.sh --skip-build aRDP "$ANDROID_HOME"
 
       - name: Build aRDP Pro APK (Debug)
